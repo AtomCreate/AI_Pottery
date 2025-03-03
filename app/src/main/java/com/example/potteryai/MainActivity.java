@@ -103,27 +103,31 @@ public class MainActivity extends AppCompatActivity {
 
     // Preprocess the image
     private float[][][][] preprocessImage(Bitmap bitmap) {
-        int targetWidth = 224;
-        int targetHeight = 224;
+        int targetWidth = 256;
+        int targetHeight = 256;
 
-        // Resize the image to 224x224
+        // Resize the image to 256x256
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
 
+        // Center crop the image to 224x224
+        int cropStartX = (resizedBitmap.getWidth() - 224) / 2;
+        int cropStartY = (resizedBitmap.getHeight() - 224) / 2;
+        Bitmap croppedBitmap = Bitmap.createBitmap(resizedBitmap, cropStartX, cropStartY, 224, 224);
+
         // Create a 4D tensor
-        float[][][][] input = new float[1][targetHeight][targetWidth][3];
-        int[] intValues = new int[targetWidth * targetHeight];
-        resizedBitmap.getPixels(intValues, 0, resizedBitmap.getWidth(), 0, 0, resizedBitmap.getWidth(), resizedBitmap.getHeight());
+        float[][][][] input = new float[1][224][224][3];
+        int[] intValues = new int[224 * 224];
+        croppedBitmap.getPixels(intValues, 0, croppedBitmap.getWidth(), 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight());
 
         for (int i = 0; i < intValues.length; i++) {
             int pixel = intValues[i];
-            input[0][i / targetWidth][i % targetWidth][0] = ((pixel >> 16) & 0xFF) / 255.0f; // Red
-            input[0][i / targetWidth][i % targetWidth][1] = ((pixel >> 8) & 0xFF) / 255.0f;  // Green
-            input[0][i / targetWidth][i % targetWidth][2] = (pixel & 0xFF) / 255.0f;         // Blue
+            input[0][i / 224][i % 224][0] = ((pixel >> 16) & 0xFF) / 255.0f; // Red
+            input[0][i / 224][i % 224][1] = ((pixel >> 8) & 0xFF) / 255.0f;  // Green
+            input[0][i / 224][i % 224][2] = (pixel & 0xFF) / 255.0f;         // Blue
         }
 
         return input;
     }
-
 
 
 
