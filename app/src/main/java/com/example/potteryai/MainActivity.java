@@ -103,18 +103,30 @@ public class MainActivity extends AppCompatActivity {
 
     // Preprocess the image
     private float[][][][] preprocessImage(Bitmap bitmap) {
-        int targetWidth = 256;
-        int targetHeight = 256;
+        // Resize the shorter side to 256 while maintaining aspect ratio
+        int originalWidth = bitmap.getWidth();
+        int originalHeight = bitmap.getHeight();
+        int targetShorterSide = 256;
 
-        // Resize the image to 256x256
+        float aspectRatio = (float) originalWidth / originalHeight;
+        int targetWidth, targetHeight;
+
+        if (originalWidth < originalHeight) {
+            targetWidth = targetShorterSide;
+            targetHeight = Math.round(targetShorterSide / aspectRatio);
+        } else {
+            targetHeight = targetShorterSide;
+            targetWidth = Math.round(targetShorterSide * aspectRatio);
+        }
+
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true);
 
-        // Center crop the image to 224x224
+        // Center crop to 224x224
         int cropStartX = (resizedBitmap.getWidth() - 224) / 2;
         int cropStartY = (resizedBitmap.getHeight() - 224) / 2;
         Bitmap croppedBitmap = Bitmap.createBitmap(resizedBitmap, cropStartX, cropStartY, 224, 224);
 
-        // Create a 4D tensor
+        // Normalize pixel values to [0, 1] range and create a 4D tensor
         float[][][][] input = new float[1][224][224][3];
         int[] intValues = new int[224 * 224];
         croppedBitmap.getPixels(intValues, 0, croppedBitmap.getWidth(), 0, 0, croppedBitmap.getWidth(), croppedBitmap.getHeight());
